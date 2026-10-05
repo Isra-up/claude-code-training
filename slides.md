@@ -69,6 +69,38 @@ Kousen IT, Inc.
 
 ---
 
+# The Book
+
+<div class="grid grid-cols-2 gap-8 mt-4 items-center">
+  <div class="flex justify-center">
+    <img src="/claude-code-up-and-running.png" alt="Cover of Claude Code: Up and Running" class="h-100 shadow-lg" />
+  </div>
+  <div>
+
+### Claude Code: Up and Running
+*Harness the Power of Agentic Coding*
+
+Ken Kousen · O'Reilly Media
+
+On the O'Reilly learning platform — a reference to keep using after today.
+
+<div class="flex items-center gap-4 mt-4">
+  <QRCode
+    :width="130"
+    :height="130"
+    type="svg"
+    data="https://learning.oreilly.com/library/view/claude-code-up/0642572388782/"
+    :margin="5"
+    :dotsOptions="{ type: 'rounded', color: '#d3002d' }"
+  />
+  <span class="text-sm">learning.oreilly.com<br/>search "Claude Code: Up and Running"</span>
+</div>
+
+  </div>
+</div>
+
+---
+
 # Course Overview
 
 <v-clicks>
@@ -90,7 +122,7 @@ Kousen IT, Inc.
 - **Core Skills**: Testing, documentation, git operations
 - **Customization**: CLAUDE.md, skills, hooks, output styles
 - **Extensibility**: Plugins, MCP integration
-- **Advanced**: Effort Levels, Plan Mode, Ultraplan, Subagents, Agent Teams, SDKs
+- **Advanced**: Effort Levels, Plan Mode, Code Review, Subagents, Agent Teams, Dynamic Workflows, SDKs
 
 </v-clicks>
 
@@ -152,7 +184,7 @@ Local surfaces share: settings, CLAUDE.md, MCP servers, skills, and hooks. Web s
 <v-clicks>
 
 - **claude.ai/code** — Run tasks on Anthropic cloud infrastructure
-- **`--remote` flag**: Start a web session from CLI: `claude --remote "Fix the auth bug"`
+- **`--cloud` flag**: Start a web session from CLI: `claude --cloud "Fix the auth bug"`
 - **Diff view**: Review changes file-by-file before creating PRs
 - **Auto-fix PRs**: Claude responds to CI failures and review comments automatically
   - **Caveat**: Replies post under your account — may trigger automation (Atlantis, Actions)
@@ -203,24 +235,24 @@ Surface handoff slash commands you'll meet again later:
 
 ---
 
-# Ultraplan
+# Code Review: `/code-review`
 
 <v-clicks>
 
-- **Cloud-based planning** for complex, codebase-wide changes
-- Launch: `/ultraplan migrate the auth service from sessions to JWTs`
-- Or include "ultraplan" in any prompt
-- Claude drafts the plan in the cloud while **you keep working locally**
-- **Browser review**: Inline comments, emoji reactions, outline navigation
-- **Execute options**: Run in cloud (creates PR) or teleport back to terminal
+- **`/code-review`** reviews the current diff — or a PR: `/code-review <level> <pr#>` (`/review` is an alias)
+- **Effort dial**: pass a level (`low` … `max`); with none, it reuses the level you typed last
+- At `high`, `xhigh`, and `max` the review runs in a **background agent** — you keep working
+- **`/code-review ultra`**: deep multi-agent review in the cloud (user-triggered, billed)
+- Claude no longer runs `/code-review` or `/verify` on its own — **invoke them deliberately**
 
 </v-clicks>
 
-```
-Terminal status indicators:
-◇ ultraplan           — Claude is researching and drafting
-◇ ultraplan needs your input  — Clarifying question
-◆ ultraplan ready     — Plan ready to review in browser
+```bash
+# Review what you're about to commit
+/code-review
+
+# Deep review of a GitHub PR
+/code-review xhigh 1234
 ```
 
 ---
@@ -246,17 +278,17 @@ The right question isn't "can Claude do this?" — it's "will I understand what 
 
 <v-clicks>
 
-- **Pro** — $20/mo · ~10-40 prompts per 5h · Sonnet 4.6
-- **Max 5x** — $100/mo · ~50-200 prompts per 5h · Sonnet 4.6 or Opus
-- **Max 20x** — $200/mo · ~200-800 prompts per 5h · Sonnet 4.6 or Opus
+- **Pro** — $20/mo · Sonnet (current default model)
+- **Max** — from $100/mo · 5x and 20x usage tiers · Sonnet or Opus
+- Usage limits are shared across Claude and Claude Code and reset every 5 hours — exact numbers shift; check the support article below
 - **Team** — shared seats, central billing, admin controls
 - **Enterprise** — SSO, audit, custom retention, Bedrock / Vertex / Foundry routing
-- Opus uses ~5× the credits of Sonnet; limits reset every 5 hours
+- Opus draws down usage faster than Sonnet — model choice affects how far a session goes
 - API path: pre-paid credits via Console; auto-creates a "Claude Code" workspace for cost tracking
 
 </v-clicks>
 
-📖 **Full details**: [Using Claude Code with your Pro or Max plan](https://support.anthropic.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)
+📖 **Full details**: [Using Claude Code with your Pro or Max plan](https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan)
 
 ---
 
@@ -264,17 +296,19 @@ The right question isn't "can Claude do this?" — it's "will I understand what 
 
 <v-clicks>
 
-| Model | When to reach for it |
+| Tier | When to reach for it |
 |---|---|
-| **Opus 4.7** | Architecture decisions, multi-file refactors, hard debugging, agent orchestration |
-| **Sonnet 4.6** | Default daily driver — most coding, exploration, doc generation |
-| **Haiku 4.5** | Fast loops, batch operations, hooks, classifiers, cheap tool calls |
+| **Opus** (top tier) | Architecture decisions, multi-file refactors, hard debugging, agent orchestration |
+| **Sonnet** (default daily driver) | Most coding, exploration, doc generation |
+| **Haiku** (fastest/cheapest) | Fast loops, batch operations, hooks, classifiers, cheap tool calls |
 
-- **Switch mid-conversation**: `Alt+P` / `Option+P`
-- **Set per session**: `claude --model claude-opus-4-7`
-- **Effort levels** (`/effort low|medium|high`) are orthogonal — control depth on whichever model you picked
+- **Switch mid-conversation**: `Alt+P` / `Option+P`, or `/model` (press `s` for this session only, `d` to set the default for new sessions)
+- **Set per session at launch**: `claude --model opus`
+- **Effort levels** (`/effort low\|medium\|high\|xhigh\|max`) are orthogonal — control depth on whichever model you picked
 
 </v-clicks>
+
+Run `/model` to see what's current — the lineup advances often (Opus 5 — 1M context — is the default Opus as of this writing, with Fable 5.1 above it; the current Opus defaults to **high** effort).
 
 Rule of thumb: Sonnet first. Reach for Opus when you've already failed once on Sonnet, not preemptively.
 
@@ -294,18 +328,17 @@ Three first-class providers for enterprises that need their own infrastructure:
 
 <v-clicks>
 
-⚠️ **Gotcha — model aliases default to *previous-version* models on all three:**
+⚠️ **Gotcha — short model aliases (`opus`, `sonnet`) often resolve to a *previous-generation* model on all three providers, lagging the latest by a version.**
 
-- `opus` → Opus **4.6** (not 4.7)
-- `sonnet` → Sonnet **4.5** (not 4.6)
-
-Use explicit version IDs for the latest models:
+Don't rely on the alias if you need the newest model — pin an explicit version ID and check your provider's model catalog for the exact string:
 ```bash
-ANTHROPIC_MODEL=claude-opus-4-7         # explicit, latest
-ANTHROPIC_MODEL=claude-sonnet-4-6       # explicit, latest
+ANTHROPIC_MODEL=claude-opus-5           # explicit version, not the bare "opus" alias
+ANTHROPIC_MODEL=claude-sonnet-5         # explicit version, not the bare "sonnet" alias
 ```
 
 Auth via the cloud provider's IAM, not an Anthropic API key. LLM gateway pattern: `ANTHROPIC_BASE_URL` + `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`.
+
+Softer alternative: `ANTHROPIC_DEFAULT_MODEL` sets where new sessions *start*, while a `/model` pick still overrides it and persists — most teams want this, not the hard `ANTHROPIC_MODEL` pin.
 
 </v-clicks>
 
@@ -355,12 +388,12 @@ with Next, Previous, and Play buttons"
 
 <v-clicks>
 
-- **Command Mode** (default) - Interactive conversation
+- **Manual Mode** (the default) - Interactive conversation; prompts before actions
 - **Auto-Accept Mode** (Shift+Tab) - Autonomous execution
 - **Plan Mode** (`/plan` or cycle with `Shift+Tab`) - Review plans before execution
 - **Auto Mode** - Safety classifier eliminates permission prompts (opt-in)
-- **Effort levels**: `/effort low|medium|high` to control reasoning depth
-- **Model switch**: `Alt+P` / `Option+P` to change models mid-conversation
+- **Effort levels**: `/effort low|medium|high|xhigh|max` to control reasoning depth
+- **Model switch**: `Alt+P` / `Option+P`, or `/model`, to change models mid-conversation
 
 </v-clicks>
 
@@ -492,8 +525,6 @@ image: https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&
 💡 **Pro tip**: Request "in parallel" for faster execution
 
 ---
-
----
 layout: image-left
 image: https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80
 backgroundSize: cover
@@ -529,14 +560,14 @@ backgroundSize: cover
 
 ---
 
-# AGENTS.md vs CLAUDE.md (the trap)
+# AGENTS.md vs CLAUDE.md (the fallback rule)
 
 <v-clicks>
 
-- **`AGENTS.md`** is the convention for *other* tools (Codex, etc.)
-- **Claude Code does NOT natively read `AGENTS.md`** — only `CLAUDE.md` (open issue [#6235](https://github.com/anthropics/claude-code/issues/6235))
-- A repo with both files looks bilingual but is silently single-language to Claude Code
-- **Bridge pattern** — reference `AGENTS.md` from `CLAUDE.md` so Claude Code picks it up:
+- **`AGENTS.md`** is the cross-tool convention (Codex, etc.)
+- **Since 2.1.277, Claude Code reads `AGENTS.md` — but only when the project has no `CLAUDE.md`** (toggle: `/config` → **Project instructions**; not yet on Bedrock / Vertex / Foundry)
+- **The trap that remains**: with *both* files present, `CLAUDE.md` wins and `AGENTS.md` is silently ignored
+- **Bridge pattern** — reference `AGENTS.md` from `CLAUDE.md` so Claude Code picks up both:
 
 ```markdown
 # CLAUDE.md
@@ -584,7 +615,7 @@ Perfect for teams wanting standardized context visibility
 
 <v-clicks>
 
-- **Built-in** — `/help`, `/clear`, `/compact`, `/init`, `/memory`, `/permissions`, `/agents`, `/config`, `/plan`, `/login`, `/mcp`, … (~30 and growing)
+- **Built-in** — `/help`, `/clear`, `/compact`, `/init`, `/memory`, `/permissions`, `/code-review`, `/config`, `/plan`, `/login`, `/mcp`, … (~30 and growing)
 - **Custom (now merged into skills)** — `.claude/commands/<name>.md` still works; skills are the modern path
 - **Skill-derived** — any skill with `user-invocable: true` exposes `/<skill-name>`
 - **Plugin-supplied** — installed plugins contribute their own commands
@@ -687,8 +718,9 @@ CLAUDE.md file as though the user invoked the init task.
 - **Tools**: `PreToolUse`, `PostToolUse`, `PermissionRequest`, `PermissionDenied`
 - **Teams**: `TeammateIdle`, `TaskCreated`, `TaskCompleted`
 - **Files**: `FileChanged`, `CwdChanged`, `WorktreeCreate`, `WorktreeRemove`
-- **Config**: `ConfigChange`, `Notification`
+- **Config & model**: `ConfigChange`, `Notification`, `PreModelSwitch`, `PostModelSwitch`
 - **Context**: `PreCompact`, `PostCompact`
+- **Output**: `MessageDisplay` — transform or hide assistant message text
 - **MCP**: `Elicitation`, `ElicitationResult`
 - **Agent-level hooks**: Skills and agents define their own hooks in frontmatter
 
@@ -742,7 +774,7 @@ Key shortcuts: `Ctrl+B` (background), `Ctrl+X Ctrl+K` (kill agents), `Ctrl+X Ctr
 <v-clicks>
 
 - **Modify the system prompt** to set role, tone, and format — not what Claude knows
-- **Built-in styles**: **Default**, **Explanatory**, **Learning**
+- **Built-in styles**: **Default**, **Proactive**, **Concise**, **Explanatory**, **Learning**
 - **Custom styles**: Create your own in `~/.claude/output-styles/` (user) or `.claude/output-styles/` (project)
 - **Use cases**:
   - Onboarding new team members (Explanatory)
@@ -759,16 +791,18 @@ Key shortcuts: `Ctrl+B` (background), `Ctrl+X Ctrl+K` (kill agents), `Ctrl+X Ctr
 <v-clicks>
 
 - **Default**: Standard software-engineering system prompt
+- **Proactive**: Executes immediately, minimizes interruptions, prefers action over planning
+- **Concise**: Leads with results, skips preamble and narration — same thoroughness
 - **Explanatory**: Adds educational "Insights" between coding steps
 - **Learning**: Collaborative learn-by-doing — Claude inserts `TODO(human)` markers for you to implement
-- **Switch via `/config`** → select **Output style** from the menu
+- **Switch via `/output-style <name>`** (bare `/output-style` lists them), or `/config` → **Output style**
 - Or edit `outputStyle` directly in `.claude/settings.local.json`:
 
 ```json
 { "outputStyle": "Explanatory" }
 ```
 
-- **Changes take effect on the next session** (the system prompt is fixed at session start so prompt caching stays warm)
+- **`/output-style` applies immediately**; a hand-edited settings file is picked up on the next session
 
 </v-clicks>
 
@@ -792,7 +826,7 @@ description: Concise output for experienced developers
 - Assume expert-level knowledge
 ```
 
-Then run `/config` → **Output style** and pick `Production`. Start a new session for the change to apply.
+Then run `/output-style production` — it applies immediately.
 
 ---
 
@@ -955,17 +989,24 @@ Anthropic provides four production-ready Agent Skills:
 ### Skill Structure
 ```
 ~/.claude/skills/my-skill/
-├── SKILL.md          # Required: Instructions with YAML frontmatter
-├── templates/        # Optional: Reusable templates
-├── scripts/          # Optional: Helper scripts
-└── reference/        # Optional: Documentation, schemas
+├── SKILL.md      # Required: YAML frontmatter + instructions
+├── templates/    # Optional: reusable templates
+├── scripts/      # Optional: helper scripts
+└── reference/    # Optional: docs, schemas
 ```
 
-### Example SKILL.md
+Frontmatter options: `effort`, `context: fork`, `paths`, `shell`, `model`
+
+</v-clicks>
+
+---
+
+# Example SKILL.md
+
 ```markdown
 ---
 name: Java Spring Generator
-description: Generate Spring Boot components following team patterns
+description: Generate Spring Boot components
 effort: high
 paths:
   - "src/**/*.java"
@@ -975,14 +1016,10 @@ paths:
 
 When generating Spring Boot code:
 1. Use constructor injection, not @Autowired
-2. Follow package conventions: controller/service/repository
-3. Include comprehensive JavaDoc
-4. Generate corresponding test files with @SpringBootTest
+2. Follow controller/service/repository packages
+3. Include JavaDoc
+4. Generate tests with @SpringBootTest
 ```
-
-New frontmatter: `effort`, `context: fork`, `paths`, `shell`, `model`
-
-</v-clicks>
 
 ---
 
@@ -1008,7 +1045,7 @@ New frontmatter: `effort`, `context: fork`, `paths`, `shell`, `model`
 <v-clicks>
 
 ### Enterprise Workflows
-- Standardize code generation patterns across teams
+- Standardize code generation across teams
 - Enforce security review processes
 - Automate compliance documentation
 - Integrate with internal tools and APIs
@@ -1016,22 +1053,24 @@ New frontmatter: `effort`, `context: fork`, `paths`, `shell`, `model`
 ### Team Collaboration
 - Share custom commands and agents
 - Distribute MCP server configurations
-- Maintain consistent development practices
 - Onboard new team members faster
 
-### Example
+</v-clicks>
+
+---
+
+# Plugin Example
+
 ```bash
 # Install company's internal plugin
 /plugin install acme-corp-standards
 
 # Plugin provides:
-# - Custom slash commands for service generation
+# - Slash commands for service generation
 # - Security review hooks
 # - MCP servers for internal APIs
 # - Pre-configured output styles
 ```
-
-</v-clicks>
 
 ---
 layout: image-right
@@ -1042,10 +1081,12 @@ image: https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0
 
 <v-clicks>
 
-- **`/effort low|medium|high`** controls reasoning depth
+- **`/effort low|medium|high|xhigh|max`** controls reasoning depth (picker labels: Faster ↔ Smarter)
 - **Low**: Fast responses for simple tasks
-- **Medium**: Balanced reasoning (default)
-- **High**: Deep analysis for complex architecture
+- **Medium**: Balanced reasoning
+- **High**: Deep analysis for complex architecture (current Opus defaults here)
+- **xhigh**: Very deep reasoning for hard tasks
+- **max**: The ceiling — reserve for the hardest problems
 - **Keywords still work**: "think", "think harder", "ultrathink"
 - Can set in skill frontmatter: `effort: high`
 
@@ -1069,7 +1110,7 @@ image: https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0
 - Review strategy, approve, or modify approach
 - Perfect for complex, multi-file changes
 - **Uses the Plan subagent** behind the scenes
-- **`/ultraplan`**: Cloud-based planning for codebase-wide changes (see Surfaces section)
+- **Plan big work in the cloud**: `claude --cloud "…"`, review from any surface, `/teleport` it back
 
 </v-clicks>
 
@@ -1134,7 +1175,7 @@ Claude launches subagents when tasks match specialized capabilities:
 </v-clicks>
 
 ```bash
-# Enable teams (research preview)
+# Enable teams (still gated by this env var)
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 # Example prompt
@@ -1142,15 +1183,18 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 the service layer, another updates tests, a third updates docs"
 ```
 
+With the env var set, **every session already has one implicit team** — no
+`TeamCreate` step.
+
 ---
 
 # How Agent Teams Work
 
 <v-clicks>
 
-- **Lead agent** creates team, breaks work into tasks, assigns teammates
+- **Lead agent** spawns teammates directly via the **Agent tool's `name` parameter** — the old `TeamCreate`/`TeamDelete` tools were removed
 - **Teammates** work independently, report back, claim new tasks
-- **Task coordination**: `blocks`/`blockedBy` dependencies prevent conflicts
+- **Messaging**: continue a teammate with `SendMessage` (relayed messages don't carry user authority — a security guardrail)
 - **Idle state is normal**: Teammates go idle between turns, wake on message
 - **Hook events**: `TeammateIdle`, `TaskCompleted` for automation
 - **Best for**: Large refactors, multi-file features, parallel code + test work
@@ -1163,6 +1207,44 @@ Lead Agent ──→ creates tasks ──→ assigns teammates
      └── receives results ←─────────┘
          (via shared task list + messages)
 ```
+
+---
+
+# Dynamic Workflows
+
+<v-clicks>
+
+- **Orchestrate many background agents** from one request — a handful up to hundreds
+- **Size is a setting**: `/config` → **Dynamic workflow size** — default **medium** (≈10 agents; **small** on Pro). Bigger fan-outs are an explicit ask, and they burn tokens fast
+- **Deterministic control flow**: loops, conditionals, fan-out, and pipelines decide what runs — not model improvisation
+- **Opt-in**: include the keyword **`ultracode`** in your prompt, or just ask Claude to "use a workflow" (the keyword was renamed from `workflow` → `ultracode`)
+- **Runs in the background**: keeps each agent's tool output out of your main context; you're notified when it completes
+- **View runs**: `/workflows`
+
+</v-clicks>
+
+<v-clicks>
+
+Built for work one context can't hold: exhaustive multi-dimension code review, a migration swept across many files, or N independent design attempts scored against each other.
+
+</v-clicks>
+
+---
+
+# Agent Teams vs. Dynamic Workflows
+
+<v-clicks>
+
+| | **Agent Teams** | **Dynamic Workflows** |
+|---|---|---|
+| Coordination | Model-driven — a lead agent decides | Script-driven — deterministic control flow |
+| Best when | Work shape emerges as you go | You can describe the structure up front |
+| Scale | A handful of teammates | ≈10 agents by default, up to hundreds |
+| Trigger | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + ask | `ultracode` keyword / "use a workflow" |
+
+- **Both** spend tokens at scale — reach for them on genuinely large, parallelizable work, not quick edits
+
+</v-clicks>
 
 ---
 
@@ -1219,13 +1301,13 @@ Lead Agent ──→ creates tasks ──→ assigns teammates
 
 <v-clicks>
 
-- **Eliminates permission prompts** via a background safety classifier (Sonnet 4.6)
+- **Eliminates permission prompts** via a background safety classifier
 - Classifier reviews each action and allows/blocks automatically
 - **Different from Auto-Accept** (`Shift+Tab`): Auto Mode is intelligent, not blanket
 - **Allows**: Local file ops, dependency installs, read-only HTTP, pushing to current branch
 - **Blocks**: Downloading + executing code, production deploys, force pushes, IAM changes
-- **Requirements**: Team / Enterprise / API plan, on Sonnet 4.6 or current Opus
-- Enable: `--enable-auto-mode` or cycle with `Shift+Tab`
+- **Requirements**: a current Sonnet / Opus / Fable model; available across paid plans (Pro, Max, Team, Enterprise, API)
+- Enable: `--permission-mode auto`, or cycle with `Shift+Tab`
 - **Recommended over** `--dangerously-skip-permissions` for new workflows; the old flag still works for personal/Pro use
 
 </v-clicks>
@@ -1550,10 +1632,10 @@ Read(src/*)             # Allow reading source files
 <v-clicks>
 
 ### Six modes (cycle with `Shift+Tab`)
-- **Default**: Prompts for each action
+- **Manual** (the default): Prompts for each action
 - **Accept Edits**: Auto-approves file edits
 - **Plan**: Read-only exploration, no edits
-- **Auto**: Safety classifier decides (Team/Enterprise/API)
+- **Auto**: Safety classifier decides (all paid plans)
 - **Don't Ask**: Only pre-approved tools run (CI/CD)
 - **Bypass Permissions**: No prompts at all
 
@@ -1654,19 +1736,20 @@ git worktree remove ../project-feature-a
 
 ### System Health Check
 ```bash
-claude /doctor  # Diagnose installation issues
+claude doctor   # Diagnose installation issues (in-session: /doctor)
 ```
 
 ### Global Configuration
+Settings live in JSON files, not CLI commands (`claude config` was retired in 2.0):
 ```bash
-claude config set -g model claude-sonnet-4-6
-claude config set -g verbose true
-claude config set -g max_conversation_turns 10
+$EDITOR ~/.claude/settings.json      # user settings (model, hooks, permissions…)
+$EDITOR .claude/settings.json        # project settings, checked in
 ```
 
 ### Check Current Settings
 ```bash
-claude config list  # View all settings
+# In-session: /config opens the interactive settings panel
+cat ~/.claude/settings.json
 echo $ANTHROPIC_API_KEY  # Verify API key
 ```
 
@@ -1728,15 +1811,34 @@ curl -fsSL https://claude.ai/install.sh | bash
 
 ---
 
+# What's New (Claude Code 2.1.278, Sept 2026)
+
+<v-clicks>
+
+- **`/skill-doctor`** — which loaded skills go unused, and what they cost in context
+- **`/diff`** — live panel of your uncommitted changes beside the conversation (fullscreen)
+- **`/effort`**: press `s` for session-only; your default effort is now saved **per model**
+- **Auto mode**: view/edit classifier rules in `/permissions` → **Auto mode**; Bash prompts offer "Yes, and switch to auto mode"
+- **Plugins**: `/plugin install <plugin> --marketplace <source>`; test one with `claude plugin eval`
+- **claude.ai sync**: skills and plugins enabled on your account appear in the terminal (`anthropic-skills:*`)
+- **Background sessions**: `claude --bg`, then `claude agents` / `attach` / `logs` / `stop` / `respawn` / `rm`
+- **Headless lockdown**: `--permission-prompts none`, `--restricted`
+- **Models**: Fable 5.1 is the default Fable (`--model fable`); `omitClaudeMd` lets a subagent skip CLAUDE.md
+
+</v-clicks>
+
+---
+
 # Command Reference: Workflow
 
 <v-clicks>
 
 | Command | Description |
 |---------|-------------|
-| `/effort low\|medium\|high` | Set reasoning depth |
+| `/effort low\|medium\|high\|xhigh\|max` | Set reasoning depth |
 | `/plan` | Enter Plan Mode from prompt |
-| `/ultraplan` | Cloud-based planning session |
+| `/code-review [level] [pr#]` | Review the current diff or a PR (`ultra` = cloud) |
+| `/workflows` | View dynamic-workflow runs (trigger with `ultracode`) |
 | `/batch` | Parallel changes across codebase |
 | `/loop 5m prompt` | Recurring prompt execution |
 | `/memory` | View and manage auto-memory |
@@ -1751,7 +1853,9 @@ curl -fsSL https://claude.ai/install.sh | bash
 
 | Command | Description |
 |---------|-------------|
-| `/branch` | Branch the conversation (was `/fork`) |
+| `/branch` | Branch the conversation |
+| `/fork` | Copy the session into a background session (own worktree) |
+| `/subtask` | Launch an in-session background subagent |
 | `/copy N` | Copy Nth-latest response to clipboard |
 | `/context` | Get context optimization suggestions |
 | `/color` | Set prompt-bar color for session |
@@ -1772,11 +1876,11 @@ curl -fsSL https://claude.ai/install.sh | bash
       :width="200"
       :height="200"
       type="svg"
-      data="https://docs.anthropic.com/en/docs/claude-code/overview"
+      data="https://code.claude.com/docs/en/overview"
       :margin="5"
       :dotsOptions="{ type: 'rounded', color: '#3b82f6' }"
     />
-    <p class="text-sm mt-2">docs.anthropic.com/claude-code</p>
+    <p class="text-sm mt-2">code.claude.com/docs</p>
   </div>
   <div class="flex flex-col items-center">
     <h3>Course Repository</h3>
@@ -1796,15 +1900,18 @@ curl -fsSL https://claude.ai/install.sh | bash
 
 # Important Links
 
-<div class="mt-8 space-y-6 text-xl">
+<div class="mt-2 text-base [&_h3]:mt-3 [&_h3]:mb-0 [&_h3]:text-xl [&_p]:my-1">
 
 <v-clicks>
 
 ### 📚 Claude Code Documentation
-`https://docs.anthropic.com/en/docs/claude-code`
+`https://code.claude.com/docs/en/overview`
 
 ### 🐙 Official GitHub Repository  
 `https://github.com/anthropics/claude-code`
+
+### 📖 *Claude Code: Up and Running* (O'Reilly)
+`https://learning.oreilly.com/library/view/claude-code-up/0642572388782/`
 
 ### 💻 Course Source Code & Exercises
 `https://github.com/kousen/claude-code-training`

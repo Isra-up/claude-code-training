@@ -61,6 +61,7 @@ Since this is a training course with multiple projects in one repository, use a 
 
 *   **Exercise: Vulnerability Remediation**
     *   This exercise demonstrates a real-world security workflow.
+    *   **Instructor note — do not "fix" this in the repo:** the old pins in `exercises/python/flask-api/requirements.txt` (`Flask==1.1.2`, `Werkzeug==1.0.1`, `markupsafe==2.0.1`) are **intentionally vulnerable**; they are what students find and upgrade here. GitHub will show Dependabot alerts for that file, and that is expected. Leave them open. (`weather-app` has no such exercise, so its dependencies are kept current.)
     *   **Step 1: Identify Vulnerabilities.** Have students ask the assistant to check for outdated packages.
     *   **Prompt:** `Analyze the requirements.txt file. Are these packages up-to-date? Are there any known security vulnerabilities in these specific versions?`
     *   **Step 2: Plan the Upgrade.** Ask the assistant to create a plan to upgrade the packages to secure versions.
@@ -266,16 +267,16 @@ Output styles customize how Claude presents solutions to match different context
 
 **Demo Sequence:**
 
-> **Heads-up for instructors**: output styles are now switched via `/config` → **Output style** (the bare `/output-style` slash command is gone). Style changes take effect on the **next session start**, not mid-conversation, because the system prompt is fixed at session start to keep prompt caching warm. The demos below restart Claude between style swaps.
+> **Heads-up for instructors**: output styles are switched via `/config` → **Output style** or `/output-style <name>` (the bare command came back in 2.1.269 and lists the styles, now including **Proactive**). `/output-style <name>` applies **immediately, mid-session** (verified on 2.1.278), so the demos below run all three styles back-to-back in one session. Only a hand-edited `outputStyle` in a settings file waits for the next session.
 
 *   **Demo: Built-in Styles Comparison** (Default / Explanatory / Learning)
 
-    Open Claude Code in the project. Run `/config`, navigate to **Output style**, pick **Explanatory**. Exit and relaunch.
+    Open Claude Code in the project. Run `/output-style Explanatory`.
 
     *   **Prompt:** `Explain how the weather API integration works in this Flask app`
     *   **Note:** Observe the educational "Insights" interleaved with the answer
 
-    Repeat: `/config` → **Output style** → **Learning**, then exit and relaunch.
+    Switch in place: `/output-style Learning`.
 
     *   **Same Prompt:** `Explain how the weather API integration works in this Flask app`
     *   **Compare:** More collaborative — Claude may insert `TODO(human)` markers asking the user to implement small pieces themselves
@@ -290,7 +291,7 @@ Output styles customize how Claude presents solutions to match different context
         - Use technical terminology freely
         Save it to ~/.claude/output-styles/production.md`
 
-    *   **Activate it:** `/config` → **Output style** → **production**, then exit and relaunch.
+    *   **Activate it:** `/output-style production` (relaunch once only if the new file isn't listed yet).
     *   **Same Prompt:** `Explain how the weather API integration works`
     *   **Compare:** Notice the terse, expert-oriented response
 
@@ -433,8 +434,8 @@ Subagents are autonomous specialized agents that Claude launches automatically f
 
 *   **Demo: Model Selection for Subagents**
     *   Explain that different subagents can use different models
-    *   Fast subagents (Explore) might use Haiku 4.5
-    *   Complex subagents (Plan) might use Opus 4.6
+    *   Fast subagents (Explore) might use Haiku (fastest tier)
+    *   Complex subagents (Plan) might use Opus (top tier)
     *   This optimizes both cost and performance
 
 *   **Demo: Custom Agent Definitions**
@@ -551,11 +552,12 @@ Demonstrate how Skills, Hooks, Output Styles, and Subagents work together seamle
 *Output style not applying:*
 - Verify file location (`~/.claude/output-styles/` for user, `.claude/output-styles/` for project)
 - Check YAML frontmatter
-- **Restart Claude Code** — output style is set at session start; mid-session selection in `/config` doesn't apply until you relaunch
+- Run bare `/output-style` to see the current style and the available list
+- **Restart Claude Code** if a newly created style file isn't listed, or if `outputStyle` was set by editing a settings file
 
 ---
 
-### 12. Surfaces, Dispatch & Ultraplan
+### 12. Surfaces, Dispatch & Code Review
 
 **Project:** Any project
 
@@ -571,16 +573,16 @@ Demonstrate the multi-surface ecosystem and cloud planning.
 *   **Demo: Remote Session**
     ```bash
     # Start a cloud session from CLI
-    claude --remote "Analyze the certificate-service for dependency updates"
+    claude --cloud "Analyze the certificate-service for dependency updates"
     ```
     *   Show the session appearing on claude.ai/code
     *   Demonstrate `/teleport` to pull it back to terminal
 
-*   **Demo: Ultraplan**
-    *   **Prompt:** `/ultraplan Plan a migration of the shopping-service from Grails to Spring Boot`
-    *   **Observe:** Terminal shows `◇ ultraplan` status while Claude drafts in the cloud
-    *   When ready, review in browser with inline comments
-    *   **Point out:** You can keep working locally while ultraplan runs
+*   **Demo: Deliberate Code Review**
+    *   In shopping-service, make a small change (or reuse the lab diff), then **Prompt:** `/code-review`
+    *   **Observe:** findings ranked by severity; with `high`+ it runs in a background agent while you keep working
+    *   **Point out:** since 2.1.215 Claude never runs `/code-review` on its own — reviews are a deliberate act
+    *   Mention `/code-review ultra` (deep multi-agent cloud review, billed) without running it live
 
 *   **Discussion: Dispatch**
     *   Explain: send tasks from Claude mobile app → Desktop app
@@ -626,7 +628,7 @@ After completing all demonstrations and exercises, students should understand:
 3. **Customization:** CLAUDE.md, skills, output styles, effort levels
 4. **Extensibility:** Plugins, MCP integration, custom agent definitions
 5. **Automation:** Hooks (command, HTTP, prompt, agent), scheduled tasks
-6. **Intelligence:** Subagents, Agent Teams, Ultraplan
+6. **Intelligence:** Subagents, Agent Teams, Dynamic Workflows, Code Review
 7. **Cross-Device:** Dispatch, Remote Control, session management
 8. **Enterprise Practices:** Auto Mode, security, team collaboration, quality gates
 

@@ -23,12 +23,12 @@ This document contains hands-on exercises for learning to use Claude Code for pr
 
 You'll meet a few permission modes during the labs:
 
-- **Default** — Claude prompts before risky actions. Good for learning.
+- **Manual** (the default mode) — Claude prompts before risky actions. Good for learning.
 - **Auto-Accept** (`Shift+Tab`) — blanket approval of write actions. Use when you trust the next few steps.
-- **Auto Mode** — Sonnet 4.6 classifier decides per action. Modern recommended escape hatch (replaces `--dangerously-skip-permissions`, which still works but is now legacy).
+- **Auto Mode** — a background safety classifier decides per action. Modern recommended escape hatch (replaces `--dangerously-skip-permissions`, which still works but is now legacy).
 - **`/sandbox`** — sandboxed shell for risky commands. **Note:** `/sandbox` requires WSL 2 — not available on native Windows or WSL 1.
 
-When restricting tools in headless or CI workflows, prefer `--disallowedTools` over `--allowedTools` — the allow-list flag may be ignored in `bypassPermissions` mode.
+When restricting tools in headless or CI workflows, prefer `--disallowedTools` over `--allowedTools`: with `--permission-mode bypassPermissions`, the allow-list does not constrain tools (re-verified on 2.1.278 — a Write ran despite `--allowedTools "Read"`). For unattended runs, newer flags are a better fit than bypass: `--permission-prompts none` auto-denies anything that would prompt (the permission mode still decides the rest), and `--restricted` removes the command-running tools and `WebFetch` outright and refuses `bypassPermissions`.
 
 ## Lab 0: Project Creation from Scratch
 
@@ -370,8 +370,8 @@ osqueryi --json "SELECT version FROM osquery_info;"
    ```
    - Learn about Explore, Plan, and General-purpose subagents
    - Understand how Claude selects the right agent for each task
-   - **Effort levels**: `/effort low|medium|high` controls reasoning depth
-   - **Keyboard shortcuts**: `Alt+P` switches models mid-conversation
+   - **Effort levels**: `/effort low|medium|high|xhigh|max` controls reasoning depth
+   - **Keyboard shortcuts**: `Alt+P` (or `/model`) switches models mid-conversation
 
 #### Part B: From Skill to Plugin (18 minutes)
 
@@ -461,7 +461,7 @@ osqueryi --json "SELECT version FROM osquery_info;"
    ```
    The skill auto-loads from its description, exactly like the standalone version. The behavior is identical; **what changed is the packaging**.
 
-   *Iteration tip*: edit `SKILL.md` and run `/reload-plugins` — no restart needed.
+   *Iteration tip*: edit `SKILL.md` and run `/reload-skills` — no restart needed.
 
 6. **Where the plugin grows from here** (~2 minute discussion):
    - **The dominant pattern is multi-skill bundling.** The plugin you just built has one skill, which is the *minor* mode. Look at `/help` in any session that has plugins installed: you'll typically see plugin-namespaced groups like `document-skills:xlsx`, `document-skills:pdf`, `document-skills:docx`, … (16 skills in that one plugin); `autoresearch:plan`, `autoresearch:debug`, `autoresearch:fix`, … (10 skills). When you have two or three related osquery-style wrappers — say one for `osqueryi`, one for `kubectl`, one for `aws` — that's the natural moment to bundle them under one plugin (`cli-wrappers`, maybe).
@@ -476,21 +476,21 @@ osqueryi --json "SELECT version FROM osquery_info;"
 
 #### Part C: Output Styles (5 minutes)
 
-> **Note**: As of recent versions, output styles are switched via `/config` → **Output style** (the older bare `/output-style` command is gone). The system prompt is fixed at session start, so a style change **takes effect on the next session** — restart Claude Code after switching.
+> **Note**: As of recent versions, output styles are switched via `/config` → **Output style**, or with `/output-style <name>` (bare `/output-style` lists the available styles). `/output-style <name>` **applies immediately** — no restart (verified on 2.1.278). Editing `outputStyle` in a settings file by hand is picked up on the next session.
 
-7. **Test Built-in Output Styles** (Default / Explanatory / Learning):
+7. **Test Built-in Output Styles** (Default / Proactive / Concise / Explanatory / Learning):
 
    In your current session, run:
    ```
-   /config
+   /output-style Explanatory
    ```
-   Navigate to **Output style** and pick **Explanatory**. Exit and restart Claude Code in this directory, then ask:
+   Then, in the same session, ask:
    ```
    Explain how the weather API integration works
    ```
    Notice the inline "Insights" Claude weaves between coding steps.
 
-   Now repeat with **Learning** (`/config` → Output style → Learning, then restart):
+   Now switch again with `/output-style Learning` and repeat — no restart needed:
    ```
    Explain how the weather API integration works
    ```
@@ -506,7 +506,7 @@ osqueryi --json "SELECT version FROM osquery_info;"
    Save it to ~/.claude/output-styles/production.md
    ```
 
-   Then run `/config` → **Output style** → **production**, restart, and verify the new register.
+   Then run `/output-style production` and verify the new register. (If the new style isn't listed yet, restart once so the file is picked up.) Finish with `/output-style default`.
 
 #### Part D: Hooks and Automation (10 minutes)
 
@@ -595,12 +595,12 @@ osqueryi --json "SELECT version FROM osquery_info;"
 
    Note that the built-in slash command `/init` creates the `CLAUDE.md` file, but you can simply ask Claude to create it.
 
-17. **The AGENTS.md trap (and the bridge pattern)**:
+17. **The AGENTS.md fallback rule (and the bridge pattern)**:
    ```
-   This repo also has an AGENTS.md (Codex's convention). Claude Code does not natively read it. Update CLAUDE.md to reference @AGENTS.md so the cross-tool conventions are picked up. Explain what changed and why.
+   This repo also has an AGENTS.md (the cross-tool convention). Claude Code only reads AGENTS.md when there is no CLAUDE.md, so with both files present it is ignored. Update CLAUDE.md to reference @AGENTS.md so the cross-tool conventions are picked up. Explain what changed and why.
    ```
 
-   Observe how `@filepath` import keeps a single source of truth.
+   Observe how `@filepath` import keeps a single source of truth. (Since 2.1.277, a project with *only* an `AGENTS.md` is read natively — the bridge matters when both files exist.)
 
 18. **Skill vs. legacy command** (compare side-by-side):
    ```
@@ -685,7 +685,7 @@ osqueryi --json "SELECT version FROM osquery_info;"
 24. **Try Remote Session** (if claude.ai/code access available):
    ```bash
    # Start a cloud session from your terminal
-   claude --remote "Analyze the weather-app for potential performance improvements"
+   claude --cloud "Analyze the weather-app for potential performance improvements"
    ```
    - Observe the session running on Anthropic cloud
    - Visit claude.ai/code to see the session in browser
@@ -730,8 +730,8 @@ After completing this lab, you will:
 **Output style not changing?**
 - Verify file is in `~/.claude/output-styles/` (or `.claude/output-styles/` for project scope)
 - Check YAML frontmatter format
-- **Restart Claude Code** — output style is set at session start; mid-session changes don't apply until next session
-- Confirm via `/config` → **Output style** that the right style is selected
+- Run bare `/output-style` to confirm which style is current and that yours is listed
+- **Restart Claude Code** if a newly created style file isn't listed, or if you set `outputStyle` by editing a settings file
 
 **MCP servers not working?**
 - Run `claude mcp list` to verify server is configured
@@ -793,6 +793,6 @@ After completing these labs:
 
 ## Additional Resources
 
-- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [Claude Code Documentation](https://code.claude.com/docs/en/overview)
 - [Best Practices Guide](https://www.anthropic.com/engineering/claude-code-best-practices)
 - [MCP Server Directory](https://github.com/modelcontextprotocol/servers)
